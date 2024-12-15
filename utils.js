@@ -16,6 +16,28 @@ function parseCSV(csvString, delimiter = ',') {
   });
 }
 
+// Process the airports CSV data
+function processAirportData(airportData) {
+  return airportData
+      .trim()
+      .split('\n')
+      .map(line => {
+        const [id, name, city, country, iata, icao, latitude, longitude, altitude, timezone, dst, tz, type] = line.split(',');
+        return {
+          id,
+          name,
+          city,
+          country,
+          iata,
+          icao,
+          latitude: parseFloat(latitude),
+          longitude: parseFloat(longitude),
+          type,
+        };
+      })
+      .filter(airport => airport.type === '"airport"' && airport.country === '"United States"');
+}
+
 // Event handler function to show a tooltip when map node is hovered
 function handleTooltip(event, map, tooltip, tooltipElement) {
   const features = map.getFeaturesAtPixel(event.pixel, { hitTolerance: 5 });

@@ -34,30 +34,17 @@ const tooltip = new ol.Overlay({
   positioning: 'center',
 });
 map.addOverlay(tooltip);
+// Hover interaction for the map
+map.on('pointermove', event => {
+  handleTooltip(event, map, tooltip, tooltipElement);
+});
 
 // Load and process airports.csv
 fetch('./airports.csv')
   .then(response => response.text())
   .then(airportData => {
     console.log("Loading airport data from `https://openflights.org/data` (downloaded on 15 Dec 2024)")
-    const airports = airportData
-      .trim()
-      .split('\n')
-      .map(line => {
-        const [id, name, city, country, iata, icao, latitude, longitude, altitude, timezone, dst, tz, type] = line.split(',');
-        return {
-          id,
-          name,
-          city,
-          country,
-          iata,
-          icao,
-          latitude: parseFloat(latitude),
-          longitude: parseFloat(longitude),
-          type,
-        };
-      })
-      .filter(airport => airport.type === '"airport"' && airport.country === '"United States"');
+    const airports = processAirportData(airportData);
     console.log('Filtered airports:', airports.length);
     buildAirportsLayer(map, airports);
 
@@ -85,9 +72,6 @@ fetch('./airports.csv')
       // Reset the cities layer
       updateCityLayer();
     });
-    // Initialize the cities layer
-    updateCityLayer();
-
     // Update city layer based on the population slider
     function updateCityLayer() {
       // Reload and filter cities based on the new population
@@ -99,9 +83,6 @@ fetch('./airports.csv')
           buildCitiesLayer(map, airports, cities);
         });
     }
-
-    // Hover interaction for the map
-    map.on('pointermove', event => {
-      handleTooltip(event, map, tooltip, tooltipElement);
-    });
+    // Initialize the cities layer
+    updateCityLayer();
   });
