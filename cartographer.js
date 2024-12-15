@@ -1,9 +1,13 @@
 // Filter to cities within 1 hour of an airport
 // & a population larger than:
-const MINIMUM_POPULATION = 200000;
+let MINIMUM_POPULATION = 200000;
+let SLIDER_MIN = 10000;
+let SLIDER_MAX = 999000;
+let SLIDER_STEP = 10000;
+
 const radiusInKm = 100; // Approx. distance for a 1-hour drive
 const radiusInDegrees = radiusInKm / 111; // Convert to degrees
-console.log("Displaying all cities with a population over %s that are within a %s radius of an airport.", MINIMUM_POPULATION, radiusInKm)
+console.log("Displaying all cities with a population over %s that are within a %s radius of an airport.", MINIMUM_POPULATION, radiusInKm);
 
 // Define map and base layer
 const map = new ol.Map({
@@ -129,6 +133,78 @@ fetch('./airports.csv')
 
         map.addLayer(cityLayer);
       });
+
+    // Create the population slider
+    const slider = document.getElementById('populationSlider');
+    slider.min = SLIDER_MIN;
+    slider.max = SLIDER_MAX;
+    slider.value = MINIMUM_POPULATION;
+    slider.step = SLIDER_STEP;
+    document.getElementById('popSliderLabel').innerHTML = numberWithCommas(slider.value);
+    slider.addEventListener('input', (event) => {
+      MINIMUM_POPULATION = parseInt(event.target.value, 10);
+      let pop = numberWithCommas(MINIMUM_POPULATION);
+      console.log('Minimum population updated to:', pop);
+      document.getElementById('popSliderLabel').innerHTML = pop;
+      updateCityLayer();
+    });
+
+    // Update city layer based on the population slider
+    function updateCityLayer() {
+      const cityFeatures = [];
+      // Reload and filter cities based on the new population
+      fetch('./citypops.csv')
+        .then(response => response.text())
+        .then(cityData => {
+          const cities = parseCSV(cityData, ';').filter(city => parseInt(city.Population, 10) > MINIMUM_POPULATION);
+          console.log('Filtered cities:', cities.length);
+          // Iterate through airports
+          airports.forEach(airport => {
+            const airportLat = airport.latitude;
+            const airportLon = airport.longitude;
+            // Iterate through cities with population criteria met
+            cities.forEach(city => {
+              const [cityLat, cityLon] = city.Coordinates.split(',').map(coord => parseFloat(coord));
+              const distance = Math.sqrt(
+                Math.pow(airportLat - cityLat, 2) + Math.pow(airportLon - cityLon, 2)
+              );
+
+              if (distance <= radiusInDegrees) {
+                cityFeatures.push(
+                  new ol.Feature({
+                    geometry: new ol.geom.Point(ol.proj.fromLonLat([cityLon, cityLat])),
+                    name: city.Name,
+                    // Add a population data field
+                    population: city.Population,
+                  })
+                );
+              }
+            });
+          });
+
+          const cityLayer = new ol.layer.Vector({
+            source: new ol.source.Vector({
+              features: cityFeatures,
+            }),
+            style: new ol.style.Style({
+              image: new ol.style.Circle({
+                radius: 6,
+                fill: new ol.style.Fill({ color: 'rgba(200,100,200,0.7)' }),
+                stroke: new ol.style.Stroke({ color: 'rgba(255,255,255,0.7)', width: 1 }),
+              }),
+            }),
+          });
+
+          map.getLayers().forEach(layer => {
+            if (layer.get('type') === 'cityLayer') {
+              map.removeLayer(layer);
+            }
+          });
+
+          cityLayer.set('type', 'cityLayer');
+          map.addLayer(cityLayer);
+        });
+    }
 
     // Hover interaction for the map
     map.on('pointermove', event => {

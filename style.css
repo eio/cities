@@ -1,0 +1,41 @@
+html, body, #map {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  pointer-events: all;
+  font-family: monospace;
+}
+#popSliderContainer {
+  z-index: 9;
+  top: 5em;
+  left: 0.5em;
+  position: absolute;
+}
+#populationSlider {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  vertical-align: middle;
+}
+#popSliderLabel {
+  transform: rotate(90deg);
+  margin-top: 2em;
+  margin-left: -1em;
+}
+.tooltip {
+  padding: 5px;
+  border: 1px solid black;
+  border-radius: 4px;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 12px;
+  padding: 10px;
+}
+.tooltip.city {
+  color: black;
+  font-size: 111%;
+  background: rgba(190,110,190,1);
+}
+.tooltip.airport {
+  color: white;
+  background: rgba(0,100,220,1);
+}
