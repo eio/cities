@@ -2,7 +2,7 @@
 // & a population larger than:
 let MINIMUM_POPULATION = 200000;
 let SLIDER_MIN = 10000;
-let SLIDER_MAX = 999000;
+let SLIDER_MAX = 777000;
 let SLIDER_STEP = 10000;
 
 const radiusInKm = 100; // Approx. distance for a 1-hour drive
