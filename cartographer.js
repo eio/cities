@@ -92,46 +92,6 @@ fetch('./airports.csv')
         console.log("Loading city population data from `https://public.opendatasoft.com/explore/dataset/geonames-all-cities-with-a-population-1000/table/?disjunctive.cou_name_en&sort=name&q=america&refine.cou_name_en=United+States` (downloaded on 15 Dec 2024)")
         const cities = parseCSV(cityData, ';').filter(city => parseInt(city.Population, 10) > MINIMUM_POPULATION);
         console.log('Filtered cities:', cities.length);
-
-        const cityFeatures = [];
-
-        airports.forEach(airport => {
-          const airportLat = airport.latitude;
-          const airportLon = airport.longitude;
-
-          cities.forEach(city => {
-            const [cityLat, cityLon] = city.Coordinates.split(',').map(coord => parseFloat(coord));
-            const distance = Math.sqrt(
-              Math.pow(airportLat - cityLat, 2) + Math.pow(airportLon - cityLon, 2)
-            );
-
-            if (distance <= radiusInDegrees) {
-              cityFeatures.push(
-                new ol.Feature({
-                  geometry: new ol.geom.Point(ol.proj.fromLonLat([cityLon, cityLat])),
-                  name: city.Name,
-                  // Add a population data field
-                  population: city.Population,
-                })
-              );
-            }
-          });
-        });
-
-        const cityLayer = new ol.layer.Vector({
-          source: new ol.source.Vector({
-            features: cityFeatures,
-          }),
-          style: new ol.style.Style({
-            image: new ol.style.Circle({
-              radius: 6,
-              fill: new ol.style.Fill({ color: 'rgba(200,100,200,0.7)' }),
-              stroke: new ol.style.Stroke({ color: 'rgba(255,255,255,0.7)', width: 1 }),
-            }),
-          }),
-        });
-
-        map.addLayer(cityLayer);
       });
 
     // Create the population slider
@@ -146,8 +106,11 @@ fetch('./airports.csv')
       let pop = numberWithCommas(MINIMUM_POPULATION);
       console.log('Minimum population updated to:', pop);
       document.getElementById('popSliderLabel').innerHTML = pop;
+      // Reset the cities layer
       updateCityLayer();
     });
+    // Initialize the cities layer
+    updateCityLayer();
 
     // Update city layer based on the population slider
     function updateCityLayer() {
